@@ -1,0 +1,120 @@
+{% extends "base.html" %}
+
+{% block title %}Placement Records{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div>
+        <h1 class="page-title">University Placement Records</h1>
+        <p class="page-subtitle">Official verified placement offers, CTC packages, and corporate hiring records.</p>
+    </div>
+    <div>
+        <a href="{{ url_for('placements.add') }}" class="btn btn-primary-custom rounded-pill px-4">
+            <i class="fa-solid fa-plus me-1"></i> Register Placement Record
+        </a>
+    </div>
+</div>
+
+<!-- Search & Filter Bar -->
+<div class="filter-bar">
+    <form method="GET" action="{{ url_for('placements.index') }}" class="row g-2 align-items-center">
+        <div class="col-md-5">
+            <div class="input-group input-group-sm">
+                <span class="input-group-text bg-white border-end-0"><i class="fa-solid fa-magnifying-glass text-muted"></i></span>
+                <input type="text" name="q" value="{{ search_query }}" class="form-control border-start-0" placeholder="Search by student, company, roll ID, or placement code...">
+            </div>
+        </div>
+        <div class="col-md-3">
+            <select name="company_id" class="form-select form-select-sm">
+                <option value="">All Companies</option>
+                {% for c in companies %}
+                <option value="{{ c.id }}" {% if selected_company == c.id|string %}selected{% endif %}>{{ c.name }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="col-md-2">
+            <select name="type" class="form-select form-select-sm">
+                <option value="">All Types</option>
+                <option value="On-campus" {% if selected_type == 'On-campus' %}selected{% endif %}>On-campus</option>
+                <option value="Off-campus" {% if selected_type == 'Off-campus' %}selected{% endif %}>Off-campus</option>
+            </select>
+        </div>
+        <div class="col-md-2 d-flex gap-2">
+            <button type="submit" class="btn btn-primary btn-sm flex-grow-1">Filter</button>
+            <a href="{{ url_for('placements.index') }}" class="btn btn-light btn-sm border" title="Reset"><i class="fa-solid fa-rotate-left"></i></a>
+        </div>
+    </form>
+</div>
+
+<!-- Placements Ledger Table -->
+<div class="content-card">
+    <div class="card-header-custom">
+        <h6 class="card-title-custom">
+            <i class="fa-solid fa-award text-success"></i>
+            Active Placement Offers ({{ placements|length }} verified offers)
+        </h6>
+        <span class="badge bg-success-subtle text-success small">Single Active Offer Rule Enforced</span>
+    </div>
+    <div class="table-responsive">
+        <table class="table table-custom table-hover">
+            <thead>
+                <tr>
+                    <th>Offer Code</th>
+                    <th>Student Name</th>
+                    <th>Department</th>
+                    <th>Hiring Company</th>
+                    <th>Job Role</th>
+                    <th>CTC Package</th>
+                    <th>Type</th>
+                    <th>Date</th>
+                    <th class="text-end">Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for plc in placements %}
+                <tr>
+                    <td class="font-monospace fw-bold text-success">{{ plc.placement_code }}</td>
+                    <td>
+                        <a href="{{ url_for('students.detail', student_id=plc.student_id) }}" class="fw-bold text-dark text-decoration-none">
+                            {{ plc.student.name }}
+                        </a>
+                        <div class="text-muted small" style="font-size: 0.75rem;">{{ plc.student.student_id }}</div>
+                    </td>
+                    <td>
+                        <span class="badge bg-light text-dark border small">{{ plc.student.department }}</span>
+                    </td>
+                    <td>
+                        <a href="{{ url_for('companies.detail', company_id=plc.company_id) }}" class="fw-medium text-dark text-decoration-none">
+                            {{ plc.company.name }}
+                        </a>
+                    </td>
+                    <td>{{ plc.job.title }}</td>
+                    <td>
+                        <span class="badge bg-success-subtle text-success fs-6 fw-bold">₹{{ plc.ctc }} LPA</span>
+                    </td>
+                    <td>
+                        <span class="badge {% if plc.placement_type == 'On-campus' %}bg-primary-subtle text-primary{% else %}bg-warning-subtle text-warning{% endif %} small">
+                            {{ plc.placement_type }}
+                        </span>
+                    </td>
+                    <td class="text-muted small">
+                        {{ plc.placement_date.strftime('%d %b %Y') if plc.placement_date else 'N/A' }}
+                    </td>
+                    <td class="text-end">
+                        <form method="POST" action="{{ url_for('placements.revoke', placement_id=plc.id) }}" class="d-inline" onsubmit="return confirm('Revoke/Decline placement for {{ plc.student.name }}?');">
+                            <button type="submit" class="btn btn-outline-danger btn-sm" title="Revoke/Decline Offer">
+                                <i class="fa-solid fa-ban"></i>
+                            </button>
+                        </form>
+                    </td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="9" class="text-center text-muted py-4">No placement records found matching the filter criteria.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

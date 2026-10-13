@@ -1,0 +1,125 @@
+{% extends "base.html" %}
+
+{% block title %}Students Directory{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div>
+        <h1 class="page-title">Student Directory</h1>
+        <p class="page-subtitle">Manage university candidates, academic profiles, skills, and placement records.</p>
+    </div>
+    <div>
+        <a href="{{ url_for('students.add') }}" class="btn btn-primary-custom rounded-pill px-4">
+            <i class="fa-solid fa-user-plus me-1"></i> Register Student
+        </a>
+    </div>
+</div>
+
+<!-- Search & Filter Bar -->
+<div class="filter-bar">
+    <form method="GET" action="{{ url_for('students.index') }}" class="row g-2 align-items-center">
+        <div class="col-md-5">
+            <div class="input-group input-group-sm">
+                <span class="input-group-text bg-white border-end-0"><i class="fa-solid fa-magnifying-glass text-muted"></i></span>
+                <input type="text" name="q" value="{{ search_query }}" class="form-control border-start-0" placeholder="Search by name, roll code, skills, or email...">
+            </div>
+        </div>
+        <div class="col-md-3">
+            <select name="department" class="form-select form-select-sm">
+                <option value="">All Departments</option>
+                {% for d in departments %}
+                <option value="{{ d }}" {% if selected_department == d %}selected{% endif %}>{{ d }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="col-md-2">
+            <select name="status" class="form-select form-select-sm">
+                <option value="">All Statuses</option>
+                <option value="Placed" {% if selected_status == 'Placed' %}selected{% endif %}>Placed</option>
+                <option value="In-Process" {% if selected_status == 'In-Process' %}selected{% endif %}>In-Process</option>
+                <option value="Unplaced" {% if selected_status == 'Unplaced' %}selected{% endif %}>Unplaced</option>
+            </select>
+        </div>
+        <div class="col-md-2 d-flex gap-2">
+            <button type="submit" class="btn btn-primary btn-sm flex-grow-1">Filter</button>
+            <a href="{{ url_for('students.index') }}" class="btn btn-light btn-sm border" title="Reset Filters"><i class="fa-solid fa-rotate-left"></i></a>
+        </div>
+    </form>
+</div>
+
+<!-- Students Table -->
+<div class="content-card">
+    <div class="card-header-custom">
+        <h6 class="card-title-custom">
+            <i class="fa-solid fa-users text-primary"></i>
+            Students List ({{ students|length }} records)
+        </h6>
+        <div class="small text-muted">Batch 2023 &bull; AI &amp; DS - B Cohort</div>
+    </div>
+    <div class="table-responsive">
+        <table class="table table-custom table-hover">
+            <thead>
+                <tr>
+                    <th>Roll ID</th>
+                    <th>Full Name</th>
+                    <th>Department</th>
+                    <th>CGPA</th>
+                    <th>Skills / Specialization</th>
+                    <th>Status</th>
+                    <th class="text-end">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for stu in students %}
+                <tr>
+                    <td class="font-monospace fw-bold text-primary">{{ stu.student_id }}</td>
+                    <td>
+                        <div class="fw-semibold text-dark">{{ stu.name }}</div>
+                        <div class="text-muted small" style="font-size: 0.76rem;">{{ stu.email }}</div>
+                    </td>
+                    <td>
+                        <span class="badge bg-light text-dark border small">{{ stu.department }}</span>
+                    </td>
+                    <td>
+                        <span class="badge {% if stu.cgpa >= 8.5 %}bg-success-subtle text-success{% elif stu.cgpa >= 7.5 %}bg-primary-subtle text-primary{% else %}bg-secondary-subtle text-secondary{% endif %} fw-bold">
+                            {{ stu.cgpa }}
+                        </span>
+                    </td>
+                    <td style="max-width: 260px;" class="text-truncate small text-muted">
+                        {{ stu.skills or 'N/A' }}
+                    </td>
+                    <td>
+                        {% if stu.placement_status == 'Placed' %}
+                            <span class="badge badge-soft badge-soft-success"><i class="fa-solid fa-circle-check"></i> Placed</span>
+                        {% elif stu.placement_status == 'In-Process' %}
+                            <span class="badge badge-soft badge-soft-warning"><i class="fa-solid fa-clock"></i> In-Process</span>
+                        {% else %}
+                            <span class="badge badge-soft badge-soft-dark"><i class="fa-solid fa-circle-xmark"></i> Unplaced</span>
+                        {% endif %}
+                    </td>
+                    <td class="text-end">
+                        <div class="btn-group btn-group-sm">
+                            <a href="{{ url_for('students.detail', student_id=stu.id) }}" class="btn btn-outline-primary" title="View Full Profile">
+                                <i class="fa-solid fa-eye"></i>
+                            </a>
+                            <a href="{{ url_for('students.edit', student_id=stu.id) }}" class="btn btn-outline-secondary" title="Edit Profile">
+                                <i class="fa-solid fa-pen-to-square"></i>
+                            </a>
+                            <form method="POST" action="{{ url_for('students.delete', student_id=stu.id) }}" class="d-inline" onsubmit="return confirm('Are you sure you want to delete student {{ stu.name }}?');">
+                                <button type="submit" class="btn btn-outline-danger" title="Delete">
+                                    <i class="fa-solid fa-trash-can"></i>
+                                </button>
+                            </form>
+                        </div>
+                    </td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="7" class="text-center text-muted py-4">No student records found matching the filter criteria.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

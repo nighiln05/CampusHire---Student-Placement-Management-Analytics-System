@@ -1,0 +1,101 @@
+{% extends "base.html" %}
+
+{% block title %}Partner Companies{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div>
+        <h1 class="page-title">Recruitment Partners</h1>
+        <p class="page-subtitle">Manage corporate recruiters, industry affiliations, and placement opportunities.</p>
+    </div>
+    <div>
+        <a href="{{ url_for('companies.add') }}" class="btn btn-primary-custom rounded-pill px-4">
+            <i class="fa-solid fa-plus me-1"></i> Register Company
+        </a>
+    </div>
+</div>
+
+<!-- Search Bar -->
+<div class="filter-bar">
+    <form method="GET" action="{{ url_for('companies.index') }}" class="row g-2 align-items-center">
+        <div class="col-md-10">
+            <div class="input-group input-group-sm">
+                <span class="input-group-text bg-white border-end-0"><i class="fa-solid fa-magnifying-glass text-muted"></i></span>
+                <input type="text" name="q" value="{{ search_query }}" class="form-control border-start-0" placeholder="Search by company name, industry, or location...">
+            </div>
+        </div>
+        <div class="col-md-2 d-flex gap-2">
+            <button type="submit" class="btn btn-primary btn-sm flex-grow-1">Search</button>
+            <a href="{{ url_for('companies.index') }}" class="btn btn-light btn-sm border" title="Reset"><i class="fa-solid fa-rotate-left"></i></a>
+        </div>
+    </form>
+</div>
+
+<!-- Companies Grid / Cards -->
+<div class="row g-4">
+    {% for comp in companies %}
+    <div class="col-md-6 col-lg-4">
+        <div class="content-card h-100 d-flex flex-column">
+            <div class="card-header-custom">
+                <div class="d-flex align-items-center gap-2">
+                    <div class="bg-info-subtle text-info rounded-3 p-2 d-flex align-items-center justify-content-center" style="width: 38px; height: 38px;">
+                        <i class="fa-solid fa-building fs-5"></i>
+                    </div>
+                    <div>
+                        <h6 class="fw-bold text-dark mb-0">{{ comp.name }}</h6>
+                        <span class="badge bg-light text-muted border small" style="font-size: 0.72rem;">{{ comp.industry }}</span>
+                    </div>
+                </div>
+            </div>
+            <div class="p-3 flex-grow-1">
+                <div class="text-muted small mb-3 text-truncate-2" style="min-height: 40px; font-size: 0.82rem;">
+                    {{ comp.description or 'Corporate partner participating in campus placement seasons.' }}
+                </div>
+
+                <div class="bg-light rounded p-2 mb-3 small">
+                    <div class="d-flex align-items-center justify-content-between mb-1">
+                        <span class="text-muted"><i class="fa-solid fa-location-dot text-danger me-1"></i> Location:</span>
+                        <span class="fw-medium text-dark">{{ comp.location }}</span>
+                    </div>
+                    <div class="d-flex align-items-center justify-content-between">
+                        <span class="text-muted"><i class="fa-solid fa-user-tie text-primary me-1"></i> HR Contact:</span>
+                        <span class="fw-medium text-dark">{{ comp.hr_contact_name or 'Not Listed' }}</span>
+                    </div>
+                </div>
+
+                <div class="d-flex align-items-center justify-content-around text-center py-2 border-top border-bottom">
+                    <div>
+                        <div class="fw-bold text-primary fs-5">{{ comp.jobs|length }}</div>
+                        <div class="text-muted small" style="font-size: 0.72rem;">Active Roles</div>
+                    </div>
+                    <div class="vr"></div>
+                    <div>
+                        <div class="fw-bold text-success fs-5">{{ comp.placements|length }}</div>
+                        <div class="text-muted small" style="font-size: 0.72rem;">Placements</div>
+                    </div>
+                </div>
+            </div>
+            <div class="p-3 bg-light border-top d-flex align-items-center justify-content-between">
+                {% if comp.website %}
+                <a href="{{ comp.website }}" target="_blank" class="small text-muted text-decoration-none">
+                    <i class="fa-solid fa-globe me-1"></i> Website
+                </a>
+                {% else %}
+                <span></span>
+                {% endif %}
+                <div class="d-flex gap-2">
+                    <a href="{{ url_for('companies.detail', company_id=comp.id) }}" class="btn btn-primary btn-sm px-3 rounded-pill">
+                        Details &rarr;
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% else %}
+    <div class="col-12 text-center text-muted py-5">
+        <i class="fa-solid fa-building-circle-xmark fs-1 mb-2"></i>
+        <p>No partner companies found matching your search.</p>
+    </div>
+    {% endfor %}
+</div>
+{% endblock %}

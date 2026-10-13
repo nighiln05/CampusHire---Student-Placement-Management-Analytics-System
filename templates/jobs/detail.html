@@ -1,0 +1,145 @@
+{% extends "base.html" %}
+
+{% block title %}{{ job.title }} - Job Details{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div class="d-flex align-items-center gap-3">
+        <div class="bg-primary-subtle text-primary rounded-3 d-flex align-items-center justify-content-center shadow-sm" style="width: 56px; height: 56px; font-size: 1.6rem;">
+            <i class="fa-solid fa-briefcase"></i>
+        </div>
+        <div>
+            <h1 class="page-title mb-0">{{ job.title }}</h1>
+            <div class="d-flex align-items-center gap-2 mt-1">
+                <span class="badge bg-light text-dark border font-monospace">{{ job.job_code }}</span>
+                <span class="fw-semibold text-primary">&bull; {{ job.company.name }}</span>
+                <span class="text-muted small">&bull; {{ job.location }}</span>
+            </div>
+        </div>
+    </div>
+    <div class="d-flex align-items-center gap-2">
+        <a href="{{ url_for('jobs.edit', job_id=job.id) }}" class="btn btn-outline-secondary btn-sm rounded-pill px-3">
+            <i class="fa-solid fa-pen me-1"></i> Edit Opening
+        </a>
+        <a href="{{ url_for('jobs.index') }}" class="btn btn-light btn-sm border rounded-pill px-3">
+            <i class="fa-solid fa-arrow-left me-1"></i> Back to Jobs
+        </a>
+    </div>
+</div>
+
+<div class="row g-4">
+    <!-- Left Column: Job Info Card -->
+    <div class="col-lg-4">
+        <div class="content-card">
+            <div class="card-header-custom">
+                <h6 class="card-title-custom">
+                    <i class="fa-solid fa-circle-info text-primary"></i>
+                    Role Specifications
+                </h6>
+                {% if job.status == 'Open' %}
+                    <span class="badge bg-success-subtle text-success">Active Drive</span>
+                {% else %}
+                    <span class="badge bg-secondary-subtle text-secondary">{{ job.status }}</span>
+                {% endif %}
+            </div>
+            <div class="p-3">
+                <div class="mb-3">
+                    <span class="text-muted small">Compensation Package</span>
+                    <div class="fw-bold text-success fs-4">₹{{ job.salary_ctc }} LPA</div>
+                </div>
+
+                <ul class="list-group list-group-flush small">
+                    <li class="list-group-item d-flex justify-content-between px-0">
+                        <span class="text-muted">Job Type:</span>
+                        <span class="fw-medium">{{ job.job_type }}</span>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between px-0">
+                        <span class="text-muted">Work Location:</span>
+                        <span class="fw-medium">{{ job.location }}</span>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between px-0">
+                        <span class="text-muted">Minimum CGPA:</span>
+                        <span class="fw-bold text-primary">{{ job.min_cgpa }} / 10.0</span>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between px-0">
+                        <span class="text-muted">Deadline:</span>
+                        <span class="fw-medium text-danger">{{ job.deadline.strftime('%d %B %Y') if job.deadline else 'Not Specified' }}</span>
+                    </li>
+                </ul>
+
+                <h6 class="small fw-bold text-muted text-uppercase mt-4">Required Skills</h6>
+                <div class="d-flex flex-wrap gap-1 mt-1">
+                    {% if job.required_skills %}
+                        {% for s in job.required_skills.split(',') %}
+                            <span class="badge bg-light text-dark border small">{{ s.strip() }}</span>
+                        {% endfor %}
+                    {% else %}
+                        <span class="text-muted small">Standard engineering competencies.</span>
+                    {% endif %}
+                </div>
+
+                <h6 class="small fw-bold text-muted text-uppercase mt-4">Role Description</h6>
+                <p class="text-muted small mb-0">{{ job.description or 'No role description provided.' }}</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Right Column: Applicants Table -->
+    <div class="col-lg-8">
+        <div class="content-card">
+            <div class="card-header-custom">
+                <h6 class="card-title-custom">
+                    <i class="fa-solid fa-users text-primary"></i>
+                    Student Applicants ({{ applications|length }})
+                </h6>
+                <a href="{{ url_for('applications.add') }}" class="btn btn-primary btn-sm rounded-pill px-3">
+                    <i class="fa-solid fa-plus me-1"></i> Add Candidate
+                </a>
+            </div>
+            <div class="table-responsive">
+                <table class="table table-custom table-hover">
+                    <thead>
+                        <tr>
+                            <th>Student</th>
+                            <th>CGPA</th>
+                            <th>Applied Date</th>
+                            <th>Current Stage</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for app in applications %}
+                        <tr>
+                            <td>
+                                <a href="{{ url_for('students.detail', student_id=app.student_id) }}" class="fw-bold text-dark text-decoration-none">
+                                    {{ app.student.name }}
+                                </a>
+                                <div class="text-muted small" style="font-size: 0.75rem;">{{ app.student.student_id }} &bull; {{ app.student.department }}</div>
+                            </td>
+                            <td>
+                                <span class="badge bg-light text-dark border">{{ app.student.cgpa }}</span>
+                            </td>
+                            <td class="text-muted small">{{ app.application_date.strftime('%d %b %Y') if app.application_date else 'N/A' }}</td>
+                            <td>
+                                <span class="badge badge-soft badge-status-{{ app.status.lower() }}">
+                                    {{ app.status }}
+                                </span>
+                            </td>
+                            <td>
+                                <a href="{{ url_for('applications.detail', app_id=app.id) }}" class="btn btn-light btn-sm border" title="Application Pipeline">
+                                    <i class="fa-solid fa-arrow-right"></i>
+                                </a>
+                            </td>
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="5" class="text-center text-muted py-4">No student applications received for this job posting yet.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

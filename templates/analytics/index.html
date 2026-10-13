@@ -1,0 +1,270 @@
+{% extends "base.html" %}
+
+{% block title %}BDA Lab Placement Analytics{% endblock %}
+
+{% block content %}
+<!-- Page Header -->
+<div class="page-header">
+    <div>
+        <div class="d-flex align-items-center gap-2 mb-1">
+            <span class="badge bg-primary-subtle text-primary fw-bold text-uppercase" style="font-size: 0.72rem;">Big Data Analytics Lab</span>
+            <span class="text-muted small">&bull; Batch 2023 Cohort</span>
+        </div>
+        <h1 class="page-title">Placement Analytics &amp; Intelligence</h1>
+        <p class="page-subtitle">Real-time analytical aggregations computed from relational database queries across 10 core metrics.</p>
+    </div>
+    <div class="d-flex align-items-center gap-2">
+        <a href="{{ url_for('dashboard.index') }}" class="btn btn-outline-secondary btn-sm rounded-pill px-3">
+            <i class="fa-solid fa-arrow-left me-1"></i> Executive Overview
+        </a>
+    </div>
+</div>
+
+<!-- Multi-Dimensional Dynamic Filter Bar -->
+<div class="filter-bar">
+    <div class="d-flex align-items-center justify-content-between mb-3">
+        <div class="fw-bold small text-dark d-flex align-items-center gap-2">
+            <i class="fa-solid fa-sliders text-primary"></i>
+            Interactive Multi-Dimensional Filter Controls
+        </div>
+        <span class="text-muted small" style="font-size: 0.76rem;">Asynchronous live chart recalculation</span>
+    </div>
+    <form id="analyticsFilterForm" class="row g-2 align-items-center">
+        <div class="col-md-3">
+            <label class="form-label small fw-semibold text-muted mb-1">Academic Department</label>
+            <select id="filterDept" class="form-select form-select-sm">
+                <option value="">All Departments</option>
+                {% for d in departments %}
+                <option value="{{ d }}">{{ d }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="col-md-2">
+            <label class="form-label small fw-semibold text-muted mb-1">Graduation Year</label>
+            <select id="filterYear" class="form-select form-select-sm">
+                <option value="">All Years</option>
+                {% for y in grad_years %}
+                <option value="{{ y }}">{{ y }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="col-md-3">
+            <label class="form-label small fw-semibold text-muted mb-1">Recruiting Company</label>
+            <select id="filterCompany" class="form-select form-select-sm">
+                <option value="">All Companies</option>
+                {% for c in companies %}
+                <option value="{{ c.id }}">{{ c.name }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="col-md-3">
+            <label class="form-label small fw-semibold text-muted mb-1">Specific Job Role</label>
+            <select id="filterJob" class="form-select form-select-sm">
+                <option value="">All Job Roles</option>
+                {% for j in jobs %}
+                <option value="{{ j.id }}">{{ j.title }} ({{ j.company.name }})</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="col-md-1 d-flex align-items-end">
+            <button type="button" id="resetFiltersBtn" class="btn btn-light btn-sm border w-100" style="margin-top: 24px;" title="Reset all filters">
+                <i class="fa-solid fa-rotate-left"></i>
+            </button>
+        </div>
+    </form>
+</div>
+
+<!-- Dynamic Summary Counter Badges -->
+<div class="row g-3 mb-4">
+    <div class="col-sm-6 col-lg-3">
+        <div class="stat-card" style="--card-accent: #4f46e5;">
+            <div class="stat-header">
+                <span class="stat-label">Filtered Cohort</span>
+                <div class="stat-icon-wrapper bg-primary-subtle text-primary"><i class="fa-solid fa-users"></i></div>
+            </div>
+            <div class="stat-val" id="kpiTotalStudents">{{ summary.total_students }}</div>
+            <div class="stat-subtext text-muted">Eligible candidates in scope</div>
+        </div>
+    </div>
+    <div class="col-sm-6 col-lg-3">
+        <div class="stat-card" style="--card-accent: #10b981;">
+            <div class="stat-header">
+                <span class="stat-label">Placed Students</span>
+                <div class="stat-icon-wrapper bg-success-subtle text-success"><i class="fa-solid fa-user-check"></i></div>
+            </div>
+            <div class="stat-val text-success" id="kpiPlacedStudents">{{ summary.placed_students }}</div>
+            <div class="stat-subtext text-muted">Verified placement offers</div>
+        </div>
+    </div>
+    <div class="col-sm-6 col-lg-3">
+        <div class="stat-card" style="--card-accent: #f59e0b;">
+            <div class="stat-header">
+                <span class="stat-label">Unplaced Candidates</span>
+                <div class="stat-icon-wrapper bg-warning-subtle text-warning"><i class="fa-solid fa-user-clock"></i></div>
+            </div>
+            <div class="stat-val text-warning" id="kpiUnplacedStudents">{{ summary.total_students - summary.placed_students }}</div>
+            <div class="stat-subtext text-muted">Active in hiring drives</div>
+        </div>
+    </div>
+    <div class="col-sm-6 col-lg-3">
+        <div class="stat-card" style="--card-accent: #0ea5e9;">
+            <div class="stat-header">
+                <span class="stat-label">Placement Success Rate</span>
+                <div class="stat-icon-wrapper bg-info-subtle text-info"><i class="fa-solid fa-chart-pie"></i></div>
+            </div>
+            <div class="stat-val text-primary" id="kpiPlacementRate">{{ summary.placement_rate }}%</div>
+            <div class="stat-subtext text-muted">Real-time conversion metric</div>
+        </div>
+    </div>
+</div>
+
+<!-- All 10 BDA Analytics Charts Grid -->
+<div class="row g-4">
+    <!-- Chart 1 & 9: Placed vs Not Placed & Placement Rate -->
+    <div class="col-lg-4">
+        <div class="content-card h-100">
+            <div class="card-header-custom">
+                <h6 class="card-title-custom">
+                    <i class="fa-solid fa-chart-pie text-success"></i>
+                    1. Placed vs Unplaced Ratio
+                </h6>
+                <span class="badge bg-light text-muted border small">Metric 1 &amp; 9</span>
+            </div>
+            <div class="p-3" style="height: 300px;">
+                <canvas id="chartPlacedVsUnplaced"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <!-- Chart 2: Department-wise Placement -->
+    <div class="col-lg-8">
+        <div class="content-card h-100">
+            <div class="card-header-custom">
+                <h6 class="card-title-custom">
+                    <i class="fa-solid fa-school-flag text-primary"></i>
+                    2. Department-wise Placements
+                </h6>
+                <span class="badge bg-light text-muted border small">Metric 2</span>
+            </div>
+            <div class="p-3" style="height: 300px;">
+                <canvas id="chartDeptPlacements"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <!-- Chart 3: Company-wise Placements -->
+    <div class="col-lg-6">
+        <div class="content-card h-100">
+            <div class="card-header-custom">
+                <h6 class="card-title-custom">
+                    <i class="fa-solid fa-trophy text-info"></i>
+                    3. Company-wise Placements Count
+                </h6>
+                <span class="badge bg-light text-muted border small">Metric 3</span>
+            </div>
+            <div class="p-3" style="height: 300px;">
+                <canvas id="chartCompanyPlacementsFull"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <!-- Chart 4: Applications by Company -->
+    <div class="col-lg-6">
+        <div class="content-card h-100">
+            <div class="card-header-custom">
+                <h6 class="card-title-custom">
+                    <i class="fa-solid fa-building text-primary"></i>
+                    4. Applications Volume by Company
+                </h6>
+                <span class="badge bg-light text-muted border small">Metric 4</span>
+            </div>
+            <div class="p-3" style="height: 300px;">
+                <canvas id="chartAppsByCompany"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <!-- Chart 5: Applications by Month (Time-Series) -->
+    <div class="col-lg-8">
+        <div class="content-card h-100">
+            <div class="card-header-custom">
+                <h6 class="card-title-custom">
+                    <i class="fa-solid fa-timeline text-primary"></i>
+                    5. Applications Time-Series (Monthly Trend)
+                </h6>
+                <span class="badge bg-light text-muted border small">Metric 5</span>
+            </div>
+            <div class="p-3" style="height: 300px;">
+                <canvas id="chartAppsByMonthFull"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <!-- Chart 6: Application Status Distribution -->
+    <div class="col-lg-4">
+        <div class="content-card h-100">
+            <div class="card-header-custom">
+                <h6 class="card-title-custom">
+                    <i class="fa-solid fa-filter-circle-dollar text-warning"></i>
+                    6. Application Stage Funnel
+                </h6>
+                <span class="badge bg-light text-muted border small">Metric 6</span>
+            </div>
+            <div class="p-3" style="height: 300px;">
+                <canvas id="chartStatusDistFull"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <!-- Chart 7: Average CTC by Department -->
+    <div class="col-lg-6">
+        <div class="content-card h-100">
+            <div class="card-header-custom">
+                <h6 class="card-title-custom">
+                    <i class="fa-solid fa-indian-rupee-sign text-success"></i>
+                    7. Average CTC Package by Department
+                </h6>
+                <span class="badge bg-light text-muted border small">Metric 7</span>
+            </div>
+            <div class="p-3" style="height: 300px;">
+                <canvas id="chartAvgCtcDept"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <!-- Chart 8: Average CTC by Company -->
+    <div class="col-lg-6">
+        <div class="content-card h-100">
+            <div class="card-header-custom">
+                <h6 class="card-title-custom">
+                    <i class="fa-solid fa-hand-holding-dollar text-purple" style="color: #8b5cf6;"></i>
+                    8. Average CTC Package by Company (Top Payers)
+                </h6>
+                <span class="badge bg-light text-muted border small">Metric 8</span>
+            </div>
+            <div class="p-3" style="height: 300px;">
+                <canvas id="chartAvgCtcCompany"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <!-- Chart 10: On-Campus vs Off-Campus -->
+    <div class="col-lg-6 offset-lg-3">
+        <div class="content-card h-100">
+            <div class="card-header-custom text-center justify-content-center">
+                <h6 class="card-title-custom">
+                    <i class="fa-solid fa-building-columns text-primary"></i>
+                    10. On-Campus vs Off-Campus Placement Breakdown
+                </h6>
+            </div>
+            <div class="p-3" style="height: 280px;">
+                <canvas id="chartOnCampusVsOff"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{{ url_for('static', filename='js/analytics.js') }}"></script>
+{% endblock %}

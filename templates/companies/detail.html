@@ -1,0 +1,221 @@
+{% extends "base.html" %}
+
+{% block title %}{{ company.name }} - Partner Details{% endblock %}
+
+{% block content %}
+<!-- Page Header -->
+<div class="page-header">
+    <div class="d-flex align-items-center gap-3">
+        <div class="bg-info-subtle text-info rounded-3 d-flex align-items-center justify-content-center shadow-sm" style="width: 56px; height: 56px; font-size: 1.6rem;">
+            <i class="fa-solid fa-building"></i>
+        </div>
+        <div>
+            <h1 class="page-title mb-0">{{ company.name }}</h1>
+            <div class="d-flex align-items-center gap-2 mt-1">
+                <span class="badge bg-light text-dark border">{{ company.industry }}</span>
+                <span class="text-muted small">&bull; <i class="fa-solid fa-location-dot text-danger me-1"></i>{{ company.location }}</span>
+            </div>
+        </div>
+    </div>
+    <div class="d-flex align-items-center gap-2">
+        <a href="{{ url_for('companies.edit', company_id=company.id) }}" class="btn btn-outline-secondary btn-sm rounded-pill px-3">
+            <i class="fa-solid fa-pen me-1"></i> Edit Company
+        </a>
+        <a href="{{ url_for('jobs.add') }}" class="btn btn-primary-custom btn-sm rounded-pill px-3">
+            <i class="fa-solid fa-plus me-1"></i> Post Job Opening
+        </a>
+    </div>
+</div>
+
+<!-- Recruitment Metrics Summary -->
+<div class="row g-3 mb-4">
+    <div class="col-sm-6 col-lg-3">
+        <div class="stat-card" style="--card-accent: #0ea5e9;">
+            <div class="stat-header">
+                <span class="stat-label">Available Jobs</span>
+                <div class="stat-icon-wrapper bg-info-subtle text-info"><i class="fa-solid fa-briefcase"></i></div>
+            </div>
+            <div class="stat-val">{{ jobs|length }}</div>
+        </div>
+    </div>
+    <div class="col-sm-6 col-lg-3">
+        <div class="stat-card" style="--card-accent: #f59e0b;">
+            <div class="stat-header">
+                <span class="stat-label">Applications</span>
+                <div class="stat-icon-wrapper bg-warning-subtle text-warning"><i class="fa-solid fa-file-signature"></i></div>
+            </div>
+            <div class="stat-val">{{ applications|length }}</div>
+        </div>
+    </div>
+    <div class="col-sm-6 col-lg-3">
+        <div class="stat-card" style="--card-accent: #4f46e5;">
+            <div class="stat-header">
+                <span class="stat-label">Selected Students</span>
+                <div class="stat-icon-wrapper bg-primary-subtle text-primary"><i class="fa-solid fa-user-check"></i></div>
+            </div>
+            <div class="stat-val text-primary">{{ selected_count }}</div>
+        </div>
+    </div>
+    <div class="col-sm-6 col-lg-3">
+        <div class="stat-card" style="--card-accent: #10b981;">
+            <div class="stat-header">
+                <span class="stat-label">Total Placements</span>
+                <div class="stat-icon-wrapper bg-success-subtle text-success"><i class="fa-solid fa-award"></i></div>
+            </div>
+            <div class="stat-val text-success">{{ placements|length }}</div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4">
+    <!-- Left Column: Company Details & HR Contact -->
+    <div class="col-lg-4">
+        <div class="content-card">
+            <div class="card-header-custom">
+                <h6 class="card-title-custom">
+                    <i class="fa-solid fa-address-card text-primary"></i>
+                    Recruiter Profile
+                </h6>
+            </div>
+            <div class="p-3">
+                <p class="text-muted small">{{ company.description or 'No detailed description available.' }}</p>
+
+                <h6 class="small fw-bold text-muted text-uppercase mt-4">Corporate Info</h6>
+                <ul class="list-group list-group-flush small">
+                    <li class="list-group-item d-flex justify-content-between px-0">
+                        <span class="text-muted">Industry:</span>
+                        <span class="fw-medium">{{ company.industry }}</span>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between px-0">
+                        <span class="text-muted">Headquarters:</span>
+                        <span class="fw-medium">{{ company.location }}</span>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between px-0">
+                        <span class="text-muted">Official Website:</span>
+                        {% if company.website %}
+                        <a href="{{ company.website }}" target="_blank" class="fw-medium text-decoration-none">Visit Site &rarr;</a>
+                        {% else %}
+                        <span class="text-muted">N/A</span>
+                        {% endif %}
+                    </li>
+                </ul>
+
+                <h6 class="small fw-bold text-muted text-uppercase mt-4">HR &amp; Campus Relations</h6>
+                <div class="bg-light rounded-3 p-3 border">
+                    <div class="fw-bold text-dark">{{ company.hr_contact_name or 'HR Lead' }}</div>
+                    <div class="small text-muted mb-2">Campus Talent Acquisition Lead</div>
+                    <div class="small text-muted"><i class="fa-solid fa-envelope text-primary me-2"></i>{{ company.hr_contact_email or 'Not Provided' }}</div>
+                    <div class="small text-muted mt-1"><i class="fa-solid fa-phone text-success me-2"></i>{{ company.hr_contact_phone or 'Not Provided' }}</div>
+                </div>
+
+                <div class="mt-4 pt-3 border-top">
+                    <form method="POST" action="{{ url_for('companies.delete', company_id=company.id) }}" onsubmit="return confirm('Delete this company? This will remove all associated jobs and applications!');">
+                        <button type="submit" class="btn btn-outline-danger btn-sm w-100">
+                            <i class="fa-solid fa-trash-can me-1"></i> Delete Company
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Right Column: Jobs & Placements -->
+    <div class="col-lg-8">
+        <!-- Open Opportunities -->
+        <div class="content-card mb-4">
+            <div class="card-header-custom">
+                <h6 class="card-title-custom">
+                    <i class="fa-solid fa-briefcase text-primary"></i>
+                    Job Openings ({{ jobs|length }})
+                </h6>
+                <a href="{{ url_for('jobs.add') }}" class="btn btn-primary btn-sm rounded-pill px-3">Post Role</a>
+            </div>
+            <div class="table-responsive">
+                <table class="table table-custom table-hover">
+                    <thead>
+                        <tr>
+                            <th>Job Code</th>
+                            <th>Role Title</th>
+                            <th>CTC Package</th>
+                            <th>Min CGPA</th>
+                            <th>Status</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for job in jobs %}
+                        <tr>
+                            <td class="font-monospace fw-bold text-primary">{{ job.job_code }}</td>
+                            <td class="fw-semibold text-dark">{{ job.title }}</td>
+                            <td><span class="badge bg-success-subtle text-success fw-bold">₹{{ job.salary_ctc }} LPA</span></td>
+                            <td>{{ job.min_cgpa }}</td>
+                            <td>
+                                {% if job.status == 'Open' %}
+                                    <span class="badge bg-success-subtle text-success">Open</span>
+                                {% elif job.status == 'Closed' %}
+                                    <span class="badge bg-danger-subtle text-danger">Closed</span>
+                                {% else %}
+                                    <span class="badge bg-secondary-subtle text-secondary">Completed</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <a href="{{ url_for('jobs.detail', job_id=job.id) }}" class="btn btn-light btn-sm border" title="View Job Applicants">
+                                    <i class="fa-solid fa-arrow-right"></i>
+                                </a>
+                            </td>
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="6" class="text-center text-muted py-4">No job openings created yet for this company.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Hired / Placed Students -->
+        <div class="content-card">
+            <div class="card-header-custom">
+                <h6 class="card-title-custom">
+                    <i class="fa-solid fa-award text-success"></i>
+                    Selected Candidates / Placements ({{ placements|length }})
+                </h6>
+            </div>
+            <div class="table-responsive">
+                <table class="table table-custom table-hover">
+                    <thead>
+                        <tr>
+                            <th>Placement Code</th>
+                            <th>Student</th>
+                            <th>Job Role</th>
+                            <th>Offered CTC</th>
+                            <th>Date</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for plc in placements %}
+                        <tr>
+                            <td class="font-monospace fw-semibold">{{ plc.placement_code }}</td>
+                            <td>
+                                <a href="{{ url_for('students.detail', student_id=plc.student_id) }}" class="fw-bold text-dark text-decoration-none">
+                                    {{ plc.student.name }}
+                                </a>
+                                <div class="text-muted small" style="font-size: 0.75rem;">{{ plc.student.student_id }} &bull; {{ plc.student.department }}</div>
+                            </td>
+                            <td>{{ plc.job.title }}</td>
+                            <td><span class="badge bg-success-subtle text-success fw-bold">₹{{ plc.ctc }} LPA</span></td>
+                            <td class="text-muted small">{{ plc.placement_date.strftime('%d %b %Y') if plc.placement_date else 'N/A' }}</td>
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="5" class="text-center text-muted py-4">No students currently placed with this company.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

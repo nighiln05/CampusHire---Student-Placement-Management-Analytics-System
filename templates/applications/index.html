@@ -1,0 +1,150 @@
+{% extends "base.html" %}
+
+{% block title %}Applications Tracking{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div>
+        <h1 class="page-title">Candidate Applications Pipeline</h1>
+        <p class="page-subtitle">Track and progress student recruitment pipelines across hiring stages.</p>
+    </div>
+    <div>
+        <a href="{{ url_for('applications.add') }}" class="btn btn-primary-custom rounded-pill px-4">
+            <i class="fa-solid fa-plus me-1"></i> New Application
+        </a>
+    </div>
+</div>
+
+<!-- Search & Filter Bar -->
+<div class="filter-bar">
+    <form method="GET" action="{{ url_for('applications.index') }}" class="row g-2 align-items-center">
+        <div class="col-md-5">
+            <div class="input-group input-group-sm">
+                <span class="input-group-text bg-white border-end-0"><i class="fa-solid fa-magnifying-glass text-muted"></i></span>
+                <input type="text" name="q" value="{{ search_query }}" class="form-control border-start-0" placeholder="Search by student, company, role, or application code...">
+            </div>
+        </div>
+        <div class="col-md-3">
+            <select name="company_id" class="form-select form-select-sm">
+                <option value="">All Companies</option>
+                {% for c in companies %}
+                <option value="{{ c.id }}" {% if selected_company == c.id|string %}selected{% endif %}>{{ c.name }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="col-md-2">
+            <select name="status" class="form-select form-select-sm">
+                <option value="">All Statuses</option>
+                {% for s in statuses %}
+                <option value="{{ s }}" {% if selected_status == s %}selected{% endif %}>{{ s }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="col-md-2 d-flex gap-2">
+            <button type="submit" class="btn btn-primary btn-sm flex-grow-1">Filter</button>
+            <a href="{{ url_for('applications.index') }}" class="btn btn-light btn-sm border" title="Reset"><i class="fa-solid fa-rotate-left"></i></a>
+        </div>
+    </form>
+</div>
+
+<!-- Applications Table -->
+<div class="content-card">
+    <div class="card-header-custom">
+        <h6 class="card-title-custom">
+            <i class="fa-solid fa-file-signature text-primary"></i>
+            Applications Ledger ({{ applications|length }} submissions)
+        </h6>
+    </div>
+    <div class="table-responsive">
+        <table class="table table-custom table-hover">
+            <thead>
+                <tr>
+                    <th>App Code</th>
+                    <th>Student Name</th>
+                    <th>Company</th>
+                    <th>Job Title</th>
+                    <th>Applied Date</th>
+                    <th>Stage Status</th>
+                    <th class="text-end">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for app in applications %}
+                <tr>
+                    <td class="font-monospace fw-bold text-primary">{{ app.application_code }}</td>
+                    <td>
+                        <a href="{{ url_for('students.detail', student_id=app.student_id) }}" class="fw-semibold text-dark text-decoration-none">
+                            {{ app.student.name }}
+                        </a>
+                        <div class="text-muted small" style="font-size: 0.75rem;">{{ app.student.student_id }} &bull; CGPA {{ app.student.cgpa }}</div>
+                    </td>
+                    <td>
+                        <div class="fw-medium text-dark">{{ app.company.name }}</div>
+                    </td>
+                    <td>
+                        <div class="small">{{ app.job.title }}</div>
+                        <span class="badge bg-success-subtle text-success small" style="font-size: 0.72rem;">₹{{ app.job.salary_ctc }} LPA</span>
+                    </td>
+                    <td class="text-muted small">
+                        {{ app.application_date.strftime('%d %b %Y') if app.application_date else 'N/A' }}
+                    </td>
+                    <td>
+                        <span class="badge badge-soft badge-status-{{ app.status.lower() }}">
+                            {{ app.status }}
+                        </span>
+                    </td>
+                    <td class="text-end">
+                        <div class="btn-group btn-group-sm">
+                            <a href="{{ url_for('applications.detail', app_id=app.id) }}" class="btn btn-outline-primary" title="View Application & Rounds">
+                                <i class="fa-solid fa-eye"></i>
+                            </a>
+                            <button type="button" class="btn btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#statusModal{{ app.id }}" title="Update Stage">
+                                <i class="fa-solid fa-arrows-rotate"></i>
+                            </button>
+                        </div>
+
+                        <!-- Update Status Modal -->
+                        <div class="modal fade text-start" id="statusModal{{ app.id }}" tabindex="-1" aria-hidden="true">
+                            <div class="modal-dialog modal-dialog-centered">
+                                <form method="POST" action="{{ url_for('applications.update_status', app_id=app.id) }}" class="modal-content">
+                                    <div class="modal-header">
+                                        <h5 class="modal-title fw-bold fs-6">Update Status - {{ app.application_code }}</h5>
+                                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                    </div>
+                                    <div class="modal-body">
+                                        <div class="mb-3">
+                                            <label class="form-label small fw-semibold">Candidate: <span class="text-dark">{{ app.student.name }}</span></label>
+                                            <div class="small text-muted">{{ app.company.name }} &bull; {{ app.job.title }}</div>
+                                        </div>
+                                        <div class="mb-3">
+                                            <label class="form-label small fw-semibold">Pipeline Stage</label>
+                                            <select name="status" class="form-select">
+                                                {% for s in statuses %}
+                                                <option value="{{ s }}" {% if app.status == s %}selected{% endif %}>{{ s }}</option>
+                                                {% endfor %}
+                                            </select>
+                                        </div>
+                                        <div class="mb-3">
+                                            <label class="form-label small fw-semibold">Remarks / Evaluation Notes</label>
+                                            <textarea name="remarks" class="form-control" rows="2" placeholder="e.g. Cleared technical interview round...">{{ app.remarks or '' }}</textarea>
+                                        </div>
+                                    </div>
+                                    <div class="modal-footer">
+                                        <button type="button" class="btn btn-light btn-sm" data-bs-dismiss="modal">Cancel</button>
+                                        <button type="submit" class="btn btn-primary btn-sm">Update Status</button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="7" class="text-center text-muted py-4">No applications found matching the search criteria.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

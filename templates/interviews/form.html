@@ -1,0 +1,98 @@
+{% extends "base.html" %}
+
+{% block title %}Schedule Interview Round{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div>
+        <h1 class="page-title">Schedule Interview Round</h1>
+        <p class="page-subtitle">Schedule an aptitude, technical, or HR interview session for an active application.</p>
+    </div>
+    <div>
+        <a href="{{ url_for('interviews.index') }}" class="btn btn-light btn-sm border rounded-pill px-3">
+            <i class="fa-solid fa-arrow-left me-1"></i> Back to Interviews
+        </a>
+    </div>
+</div>
+
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="content-card">
+            <div class="card-header-custom">
+                <h6 class="card-title-custom">
+                    <i class="fa-solid fa-calendar-plus text-primary"></i>
+                    Interview Round Scheduling
+                </h6>
+            </div>
+            <div class="p-4">
+                <form method="POST">
+                    <div class="row g-3">
+                        <div class="col-12">
+                            <label class="form-label small fw-semibold">Target Application <span class="text-danger">*</span></label>
+                            {% if preselected_app %}
+                                <input type="hidden" name="application_id" value="{{ preselected_app.id }}">
+                                <div class="p-3 bg-light rounded-3 border">
+                                    <div class="fw-bold text-dark">{{ preselected_app.student.name }} ({{ preselected_app.student.student_id }})</div>
+                                    <div class="small text-muted">{{ preselected_app.company.name }} &bull; {{ preselected_app.job.title }} ({{ preselected_app.application_code }})</div>
+                                </div>
+                            {% else %}
+                                <select name="application_id" class="form-select" required>
+                                    <option value="">Select Candidate Application...</option>
+                                    {% for a in applications %}
+                                    <option value="{{ a.id }}">{{ a.student.name }} ({{ a.student.student_id }}) &rarr; {{ a.company.name }} ({{ a.job.title }})</option>
+                                    {% endfor %}
+                                </select>
+                            {% endif %}
+                        </div>
+
+                        <div class="col-md-4">
+                            <label class="form-label small fw-semibold">Round Number</label>
+                            <input type="number" min="1" max="10" name="round_number" value="1" class="form-control" required>
+                        </div>
+
+                        <div class="col-md-4">
+                            <label class="form-label small fw-semibold">Round Type <span class="text-danger">*</span></label>
+                            <select name="round_type" class="form-select" required>
+                                <option value="Technical" selected>Technical</option>
+                                <option value="Aptitude">Aptitude</option>
+                                <option value="HR">HR</option>
+                                <option value="Group Discussion">Group Discussion</option>
+                                <option value="Managerial">Managerial</option>
+                            </select>
+                        </div>
+
+                        <div class="col-md-4">
+                            <label class="form-label small fw-semibold">Scheduled Date &amp; Time</label>
+                            <input type="datetime-local" name="round_date" class="form-control">
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label small fw-semibold">Interviewer / Panel Members</label>
+                            <input type="text" name="interviewer" class="form-control" placeholder="e.g. Senior Tech Lead / HR Manager">
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label small fw-semibold">Initial Result</label>
+                            <select name="result" class="form-select">
+                                <option value="Pending" selected>Pending</option>
+                                <option value="Passed">Passed</option>
+                                <option value="Failed">Failed</option>
+                            </select>
+                        </div>
+
+                        <div class="col-12">
+                            <label class="form-label small fw-semibold">Instructions / Initial Remarks</label>
+                            <textarea name="remarks" class="form-control" rows="3" placeholder="Candidate preparation notes, meeting link, or evaluation rubric..."></textarea>
+                        </div>
+                    </div>
+
+                    <div class="d-flex justify-content-end gap-2 mt-4 pt-3 border-top">
+                        <a href="{{ url_for('interviews.index') }}" class="btn btn-light">Cancel</a>
+                        <button type="submit" class="btn btn-primary-custom px-4">Schedule Round</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

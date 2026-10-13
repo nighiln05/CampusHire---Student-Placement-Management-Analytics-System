@@ -1,0 +1,110 @@
+{% extends "base.html" %}
+
+{% block title %}{% if job %}Edit Job - {{ job.title }}{% else %}Post New Job Opening{% endif %}{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div>
+        <h1 class="page-title">{% if job %}Edit Job Opportunity{% else %}Post New Job Opportunity{% endif %}</h1>
+        <p class="page-subtitle">Configure job specifications, eligibility criteria, and CTC package details.</p>
+    </div>
+    <div>
+        <a href="{{ url_for('jobs.index') }}" class="btn btn-light btn-sm border rounded-pill px-3">
+            <i class="fa-solid fa-arrow-left me-1"></i> Back to Jobs
+        </a>
+    </div>
+</div>
+
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="content-card">
+            <div class="card-header-custom">
+                <h6 class="card-title-custom">
+                    <i class="fa-solid fa-briefcase text-primary"></i>
+                    Job Opportunity Details
+                </h6>
+            </div>
+            <div class="p-4">
+                <form method="POST">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label small fw-semibold">Partner Company <span class="text-danger">*</span></label>
+                            <select name="company_id" class="form-select" required>
+                                <option value="">Select Company...</option>
+                                {% for c in companies %}
+                                <option value="{{ c.id }}" {% if job and job.company_id == c.id %}selected{% endif %}>{{ c.name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label small fw-semibold">Job Code <span class="text-danger">*</span></label>
+                            <input type="text" name="job_code" value="{{ job.job_code if job else '' }}" class="form-control font-monospace" placeholder="e.g. JOB-AWS-003" required {% if job %}readonly{% endif %}>
+                        </div>
+
+                        <div class="col-md-8">
+                            <label class="form-label small fw-semibold">Role Title <span class="text-danger">*</span></label>
+                            <input type="text" name="title" value="{{ job.title if job else '' }}" class="form-control" placeholder="e.g. Cloud Solutions Engineer" required>
+                        </div>
+
+                        <div class="col-md-4">
+                            <label class="form-label small fw-semibold">Employment Type</label>
+                            <select name="job_type" class="form-select">
+                                <option value="Full-Time" {% if job and job.job_type == 'Full-Time' %}selected{% endif %}>Full-Time</option>
+                                <option value="Internship" {% if job and job.job_type == 'Internship' %}selected{% endif %}>Internship</option>
+                                <option value="Placement+Intern" {% if job and job.job_type == 'Placement+Intern' %}selected{% endif %}>Placement + Intern</option>
+                            </select>
+                        </div>
+
+                        <div class="col-md-4">
+                            <label class="form-label small fw-semibold">Work Location <span class="text-danger">*</span></label>
+                            <input type="text" name="location" value="{{ job.location if job else '' }}" class="form-control" placeholder="e.g. Bangalore" required>
+                        </div>
+
+                        <div class="col-md-4">
+                            <label class="form-label small fw-semibold">Salary Package CTC (LPA) <span class="text-danger">*</span></label>
+                            <input type="number" step="0.1" name="salary_ctc" value="{{ job.salary_ctc if job else '10.0' }}" class="form-control" placeholder="12.5" required>
+                        </div>
+
+                        <div class="col-md-4">
+                            <label class="form-label small fw-semibold">Minimum CGPA</label>
+                            <input type="number" step="0.1" min="0" max="10" name="min_cgpa" value="{{ job.min_cgpa if job else '7.0' }}" class="form-control" required>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label small fw-semibold">Application Deadline</label>
+                            <input type="date" name="deadline" value="{{ job.deadline.strftime('%Y-%m-%d') if job and job.deadline else '' }}" class="form-control">
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label small fw-semibold">Drive Status</label>
+                            <select name="status" class="form-select">
+                                <option value="Open" {% if not job or job.status == 'Open' %}selected{% endif %}>Open</option>
+                                <option value="Closed" {% if job and job.status == 'Closed' %}selected{% endif %}>Closed</option>
+                                <option value="Completed" {% if job and job.status == 'Completed' %}selected{% endif %}>Completed</option>
+                            </select>
+                        </div>
+
+                        <div class="col-12">
+                            <label class="form-label small fw-semibold">Required Skills (Comma-separated)</label>
+                            <textarea name="required_skills" class="form-control" rows="2" placeholder="e.g. Python, SQL, Cloud Architecture, Big Data, PyTorch">{{ job.required_skills if job else '' }}</textarea>
+                        </div>
+
+                        <div class="col-12">
+                            <label class="form-label small fw-semibold">Detailed Job Description</label>
+                            <textarea name="description" class="form-control" rows="4" placeholder="Overview of responsibilities and eligibility criteria...">{{ job.description if job else '' }}</textarea>
+                        </div>
+                    </div>
+
+                    <div class="d-flex justify-content-end gap-2 mt-4 pt-3 border-top">
+                        <a href="{{ url_for('jobs.index') }}" class="btn btn-light">Cancel</a>
+                        <button type="submit" class="btn btn-primary-custom px-4">
+                            {% if job %}Save Changes{% else %}Post Job Opening{% endif %}
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

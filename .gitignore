@@ -1,0 +1,29 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+bda_env/
+ENV/
+
+# Environment variables & secrets
+.env
+*.pem
+
+# Archives & SQLite databases
+*.zip
+*.tar.gz
+*.db
+*.sqlite3
+
+# Uploads directory
+uploads/
+
+# IDE & OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db

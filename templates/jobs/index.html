@@ -1,0 +1,123 @@
+{% extends "base.html" %}
+
+{% block title %}Job Opportunities{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div>
+        <h1 class="page-title">Placement Job Openings</h1>
+        <p class="page-subtitle">Track corporate placement listings, eligibility criteria, and candidate applications.</p>
+    </div>
+    <div>
+        <a href="{{ url_for('jobs.add') }}" class="btn btn-primary-custom rounded-pill px-4">
+            <i class="fa-solid fa-plus me-1"></i> Post New Job
+        </a>
+    </div>
+</div>
+
+<!-- Search & Filter Bar -->
+<div class="filter-bar">
+    <form method="GET" action="{{ url_for('jobs.index') }}" class="row g-2 align-items-center">
+        <div class="col-md-5">
+            <div class="input-group input-group-sm">
+                <span class="input-group-text bg-white border-end-0"><i class="fa-solid fa-magnifying-glass text-muted"></i></span>
+                <input type="text" name="q" value="{{ search_query }}" class="form-control border-start-0" placeholder="Search by job title, skills, code, or location...">
+            </div>
+        </div>
+        <div class="col-md-3">
+            <select name="company_id" class="form-select form-select-sm">
+                <option value="">All Companies</option>
+                {% for c in companies %}
+                <option value="{{ c.id }}" {% if selected_company == c.id|string %}selected{% endif %}>{{ c.name }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="col-md-2">
+            <select name="status" class="form-select form-select-sm">
+                <option value="">All Statuses</option>
+                <option value="Open" {% if selected_status == 'Open' %}selected{% endif %}>Open</option>
+                <option value="Closed" {% if selected_status == 'Closed' %}selected{% endif %}>Closed</option>
+                <option value="Completed" {% if selected_status == 'Completed' %}selected{% endif %}>Completed</option>
+            </select>
+        </div>
+        <div class="col-md-2 d-flex gap-2">
+            <button type="submit" class="btn btn-primary btn-sm flex-grow-1">Filter</button>
+            <a href="{{ url_for('jobs.index') }}" class="btn btn-light btn-sm border" title="Reset"><i class="fa-solid fa-rotate-left"></i></a>
+        </div>
+    </form>
+</div>
+
+<!-- Jobs Table / Card List -->
+<div class="content-card">
+    <div class="card-header-custom">
+        <h6 class="card-title-custom">
+            <i class="fa-solid fa-briefcase text-primary"></i>
+            Job Openings Directory ({{ jobs|length }} postings)
+        </h6>
+    </div>
+    <div class="table-responsive">
+        <table class="table table-custom table-hover">
+            <thead>
+                <tr>
+                    <th>Job Code</th>
+                    <th>Role Title</th>
+                    <th>Company</th>
+                    <th>Package CTC</th>
+                    <th>Min CGPA</th>
+                    <th>Deadline</th>
+                    <th>Status</th>
+                    <th class="text-end">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for job in jobs %}
+                <tr>
+                    <td class="font-monospace fw-bold text-primary">{{ job.job_code }}</td>
+                    <td>
+                        <div class="fw-semibold text-dark">{{ job.title }}</div>
+                        <div class="text-muted small" style="font-size: 0.76rem;">{{ job.job_type }} &bull; {{ job.location }}</div>
+                    </td>
+                    <td>
+                        <a href="{{ url_for('companies.detail', company_id=job.company_id) }}" class="fw-medium text-dark text-decoration-none">
+                            {{ job.company.name }}
+                        </a>
+                    </td>
+                    <td>
+                        <span class="badge bg-success-subtle text-success fw-bold">₹{{ job.salary_ctc }} LPA</span>
+                    </td>
+                    <td>
+                        <span class="badge bg-light text-dark border">{{ job.min_cgpa }}</span>
+                    </td>
+                    <td class="text-muted small">
+                        {{ job.deadline.strftime('%d %b %Y') if job.deadline else 'Rolling' }}
+                    </td>
+                    <td>
+                        {% if job.status == 'Open' %}
+                            <span class="badge badge-soft badge-soft-success"><i class="fa-solid fa-circle-dot me-1"></i>Open</span>
+                        {% elif job.status == 'Closed' %}
+                            <span class="badge badge-soft badge-soft-danger">Closed</span>
+                        {% else %}
+                            <span class="badge badge-soft badge-soft-dark">Completed</span>
+                        {% endif %}
+                    </td>
+                    <td class="text-end">
+                        <div class="btn-group btn-group-sm">
+                            <a href="{{ url_for('jobs.detail', job_id=job.id) }}" class="btn btn-outline-primary" title="View Applicants">
+                                <i class="fa-solid fa-eye"></i>
+                            </a>
+                            <a href="{{ url_for('jobs.edit', job_id=job.id) }}" class="btn btn-outline-secondary" title="Edit Opening">
+                                <i class="fa-solid fa-pen-to-square"></i>
+                            </a>
+                        </div>
+                    </td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="8" class="text-center text-muted py-4">No job opportunities found matching criteria.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}
