@@ -1,7 +1,5 @@
 # CampusPlacements
 ### Student Placement Management & Analytics System
-**Big Data Analytics Lab Mini Project**  
-*Department of Artificial Intelligence & Data Science (AI & DS – B, Batch 2023)*
 
 ---
 
